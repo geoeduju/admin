@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>수업 활동 통합 관리자 페이지</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; background-color: #f8f9fa; }
+    h1 { color: #333; }
+    .tab-buttons { margin-bottom: 20px; }
+    .tab-btn {
+      padding: 10px 20px; font-size: 16px; border: none;
+      background-color: #e0e0e0; cursor: pointer; border-radius: 5px; margin-right: 5px;
+    }
+    .tab-btn.active { background-color: #007bff; color: white; font-weight: bold; }
+    .refresh-btn { float: right; padding: 10px 15px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    .loading { font-size: 18px; color: #666; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h1>📊 수업 활동 통합 관리자 페이지</h1>
+  
+  <div class="tab-buttons">
+    <button class="tab-btn active" onclick="switchTab('app1')">웹앱 1 활동 결과</button>
+    <button class="tab-btn" onclick="switchTab('app2')">웹앱 2 활동 결과</button>
+    <button class="refresh-btn" onclick="loadData()">🔄 새로고침</button>
+  </div>
+
+  <div id="loading" class="loading">데이터를 불러오는 중입니다...</div>
+  <div id="table-container"></div>
+
+  <script>
+    // 1단계에서 복사한 구글 앱스크립트 웹 앱 URL을 입력하세요.
+    const GAS_URL = "여기에_1단계에서_복사한_GAS_WEB_APP_URL_입력";
+
+    let globalData = { app1: [], app2: [] };
+    let currentTab = 'app1';
+
+    async function loadData() {
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('table-container').innerHTML = '';
+      
+      try {
+        const response = await fetch(GAS_URL);
+        globalData = await response.json();
+        document.getElementById('loading').style.display = 'none';
+        renderTable(currentTab);
+      } catch (error) {
+        document.getElementById('loading').innerText = '데이터를 불러오는 데 실패했습니다.';
+        console.error(error);
+      }
+    }
+
+    function switchTab(tabName) {
+      currentTab = tabName;
+      document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+        btn.classList.toggle('active', (tabName === 'app1' && idx === 0) || (tabName === 'app2' && idx === 1));
+      });
+      renderTable(tabName);
+    }
+
+    function renderTable(tabName) {
+      const data = globalData[tabName];
+      const container = document.getElementById('table-container');
+      
+      if (!data || data.length === 0) {
+        container.innerHTML = '<p>제출된 데이터가 없습니다.</p>';
+        return;
+      }
+
+      const headers = Object.keys(data[0]);
+      let html = '<table><thead><tr>';
+      
+      headers.forEach(h => html += `<th>${h}</th>`);
+      html += '</tr></thead><tbody>';
+
+      data.forEach(row => {
+        html += '<tr>';
+        headers.forEach(h => html += `<td>${row[h] !== undefined ? row[h] : ''}</td>`);
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // 페이지 로드시 자동으로 데이터 불러오기
+    loadData();
+  </script>
+</body>
+</html>
